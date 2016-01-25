@@ -1,9 +1,9 @@
 /*
  This file is part of Appirater.
- 
+
  Copyright (c) 2012, Arash Payan
  All rights reserved.
- 
+
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
  files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@
  copies of the Software, and to permit persons to whom the
  Software is furnished to do so, subject to the following
  conditions:
- 
+
  The above copyright notice and this permission notice shall be
  included in all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -34,7 +34,7 @@
  * Copyright 2012 Arash Payan. All rights reserved.
  */
 
-#import "Appirater.h"
+#import "GCAppirater.h"
 #import <SystemConfiguration/SCNetworkReachability.h>
 #include <netinet/in.h>
 
@@ -42,17 +42,17 @@
 #warning This file must be compiled with ARC. Use -fobjc-arc flag (or convert project to ARC).
 #endif
 
-NSString *const kAppiraterFirstUseDate				= @"kAppiraterFirstUseDate";
-NSString *const kAppiraterUseCount					= @"kAppiraterUseCount";
-NSString *const kAppiraterSignificantEventCount		= @"kAppiraterSignificantEventCount";
-NSString *const kAppiraterCurrentVersion			= @"kAppiraterCurrentVersion";
-NSString *const kAppiraterRatedCurrentVersion		= @"kAppiraterRatedCurrentVersion";
-NSString *const kAppiraterDeclinedToRate			= @"kAppiraterDeclinedToRate";
-NSString *const kAppiraterReminderRequestDate		= @"kAppiraterReminderRequestDate";
+NSString *const kGCAppiraterFirstUseDate				= @"kGCAppiraterFirstUseDate";
+NSString *const kGCAppiraterUseCount					= @"kGCAppiraterUseCount";
+NSString *const kGCAppiraterSignificantEventCount		= @"kGCAppiraterSignificantEventCount";
+NSString *const kGCAppiraterCurrentVersion			= @"kGCAppiraterCurrentVersion";
+NSString *const kGCAppiraterRatedCurrentVersion		= @"kGCAppiraterRatedCurrentVersion";
+NSString *const kGCAppiraterDeclinedToRate			= @"kGCAppiraterDeclinedToRate";
+NSString *const kGCAppiraterReminderRequestDate		= @"kGCAppiraterReminderRequestDate";
 
-NSString *templateReviewURL = @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=APP_ID";
-NSString *templateReviewURLiOS7 = @"itms-apps://itunes.apple.com/app/idAPP_ID";
-NSString *templateReviewURLiOS8 = @"itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=APP_ID&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software";
+static NSString *templateReviewURL = @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=APP_ID";
+static NSString *templateReviewURLiOS7 = @"itms-apps://itunes.apple.com/app/idAPP_ID";
+static NSString *templateReviewURLiOS8 = @"itms-apps://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=APP_ID&onlyLatestVersion=true&pageNumber=0&sortOrdering=1&type=Purple+Software";
 
 static NSString *_appId;
 static double _daysUntilPrompt = 30;
@@ -61,23 +61,23 @@ static NSInteger _significantEventsUntilPrompt = -1;
 static double _timeBeforeReminding = 1;
 static BOOL _debug = NO;
 #if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_5_0
-	static id<AppiraterDelegate> _delegate;
+	static id<GCAppiraterDelegate> _delegate;
 #else
-	__weak static id<AppiraterDelegate> _delegate;
+	__weak static id<GCAppiraterDelegate> _delegate;
 #endif
 static BOOL _usesAnimation = TRUE;
 static UIStatusBarStyle _statusBarStyle;
 static BOOL _modalOpen = false;
 static BOOL _alwaysUseMainBundle = NO;
 
-@interface Appirater ()
+@interface GCAppirater ()
 @property (nonatomic, copy) NSString *alertTitle;
 @property (nonatomic, copy) NSString *alertMessage;
 @property (nonatomic, copy) NSString *alertCancelTitle;
 @property (nonatomic, copy) NSString *alertRateTitle;
 @property (nonatomic, copy) NSString *alertRateLaterTitle;
 - (BOOL)connectedToNetwork;
-+ (Appirater*)sharedInstance;
++ (GCAppirater*)sharedInstance;
 - (void)showPromptWithChecks:(BOOL)withChecks
       displayRateLaterButton:(BOOL)displayRateLaterButton;
 - (void)showRatingAlert:(BOOL)displayRateLaterButton;
@@ -88,7 +88,7 @@ static BOOL _alwaysUseMainBundle = NO;
 - (void)hideRatingAlert;
 @end
 
-@implementation Appirater 
+@implementation GCAppirater
 
 @synthesize ratingAlert;
 
@@ -140,14 +140,14 @@ static BOOL _alwaysUseMainBundle = NO;
 + (void) setDebug:(BOOL)debug {
     _debug = debug;
 }
-+ (void)setDelegate:(id<AppiraterDelegate>)delegate{
++ (void)setDelegate:(id<GCAppiraterDelegate>)delegate{
 	_delegate = delegate;
 }
 + (void)setUsesAnimation:(BOOL)animation {
 	_usesAnimation = animation;
 }
 + (void)setOpenInAppStore:(BOOL)openInAppStore {
-    [Appirater sharedInstance].openInAppStore = openInAppStore;
+    [[self class] sharedInstance].openInAppStore = openInAppStore;
 }
 + (void)setStatusBarStyle:(UIStatusBarStyle)style {
 	_statusBarStyle = style;
@@ -166,10 +166,10 @@ static BOOL _alwaysUseMainBundle = NO;
     if (_alwaysUseMainBundle) {
         bundle = [NSBundle mainBundle];
     } else {
-        NSURL *appiraterBundleURL = [[NSBundle mainBundle] URLForResource:@"Appirater" withExtension:@"bundle"];
+        NSURL *appiraterBundleURL = [[NSBundle mainBundle] URLForResource:@"GCAppirater" withExtension:@"bundle"];
 
         if (appiraterBundleURL) {
-            // Appirater.bundle will likely only exist when used via CocoaPods
+            // GCAppirater.bundle will likely only exist when used via CocoaPods
             bundle = [NSBundle bundleWithURL:appiraterBundleURL];
         } else {
             bundle = [NSBundle mainBundle];
@@ -217,7 +217,7 @@ static BOOL _alwaysUseMainBundle = NO;
             self.openInAppStore = NO;
         }
     }
-    
+
     return self;
 }
 
@@ -227,55 +227,55 @@ static BOOL _alwaysUseMainBundle = NO;
     bzero(&zeroAddress, sizeof(zeroAddress));
     zeroAddress.sin_len = sizeof(zeroAddress);
     zeroAddress.sin_family = AF_INET;
-	
+
     // Recover reachability flags
     SCNetworkReachabilityRef defaultRouteReachability = SCNetworkReachabilityCreateWithAddress(NULL, (struct sockaddr *)&zeroAddress);
     SCNetworkReachabilityFlags flags;
-	
+
     Boolean didRetrieveFlags = SCNetworkReachabilityGetFlags(defaultRouteReachability, &flags);
     CFRelease(defaultRouteReachability);
-	
+
     if (!didRetrieveFlags)
     {
         NSLog(@"Error. Could not recover network reachability flags");
         return NO;
     }
-	
+
     BOOL isReachable = flags & kSCNetworkFlagsReachable;
     BOOL needsConnection = flags & kSCNetworkFlagsConnectionRequired;
 	BOOL nonWiFi = flags & kSCNetworkReachabilityFlagsTransientConnection;
-	
+
 	NSURL *testURL = [NSURL URLWithString:@"http://www.apple.com/"];
 	NSURLRequest *testRequest = [NSURLRequest requestWithURL:testURL  cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:20.0];
 	NSURLConnection *testConnection = [[NSURLConnection alloc] initWithRequest:testRequest delegate:self];
-	
+
     return ((isReachable && !needsConnection) || nonWiFi) ? (testConnection ? YES : NO) : NO;
 }
 
-+ (Appirater*)sharedInstance {
-	static Appirater *appirater = nil;
++ (GCAppirater*)sharedInstance {
+	static GCAppirater *appirater = nil;
 	if (appirater == nil)
 	{
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            appirater = [[Appirater alloc] init];
+            appirater = [[[self class] alloc] init];
 			appirater.delegate = _delegate;
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:
                 UIApplicationWillResignActiveNotification object:nil];
         });
 	}
-	
+
 	return appirater;
 }
 
 - (void)showRatingAlert:(BOOL)displayRateLaterButton {
   UIAlertView *alertView = nil;
-  id <AppiraterDelegate> delegate = _delegate;
-    
+  id <GCAppiraterDelegate> delegate = _delegate;
+
   if(delegate && [delegate respondsToSelector:@selector(appiraterShouldDisplayAlert:)] && ![delegate appiraterShouldDisplayAlert:self]) {
       return;
   }
-  
+
   if (displayRateLaterButton) {
   	alertView = [[UIAlertView alloc] initWithTitle:self.alertTitle
                                            message:self.alertMessage
@@ -337,134 +337,134 @@ static BOOL _alwaysUseMainBundle = NO;
 - (BOOL)ratingConditionsHaveBeenMet {
 	if (_debug)
 		return YES;
-	
+
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	
-	NSDate *dateOfFirstLaunch = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kAppiraterFirstUseDate]];
+
+	NSDate *dateOfFirstLaunch = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kGCAppiraterFirstUseDate]];
 	NSTimeInterval timeSinceFirstLaunch = [[NSDate date] timeIntervalSinceDate:dateOfFirstLaunch];
 	NSTimeInterval timeUntilRate = 60 * 60 * 24 * _daysUntilPrompt;
 	if (timeSinceFirstLaunch < timeUntilRate)
 		return NO;
-	
+
 	// check if the app has been used enough
-	NSInteger useCount = [userDefaults integerForKey:kAppiraterUseCount];
+	NSInteger useCount = [userDefaults integerForKey:kGCAppiraterUseCount];
 	if (useCount < _usesUntilPrompt)
 		return NO;
-	
+
 	// check if the user has done enough significant events
-	NSInteger sigEventCount = [userDefaults integerForKey:kAppiraterSignificantEventCount];
+	NSInteger sigEventCount = [userDefaults integerForKey:kGCAppiraterSignificantEventCount];
 	if (sigEventCount < _significantEventsUntilPrompt)
 		return NO;
-	
+
 	// if the user wanted to be reminded later, has enough time passed?
-	NSDate *reminderRequestDate = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kAppiraterReminderRequestDate]];
+	NSDate *reminderRequestDate = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kGCAppiraterReminderRequestDate]];
 	NSTimeInterval timeSinceReminderRequest = [[NSDate date] timeIntervalSinceDate:reminderRequestDate];
 	NSTimeInterval timeUntilReminder = 60 * 60 * 24 * _timeBeforeReminding;
 	if (timeSinceReminderRequest < timeUntilReminder)
 		return NO;
-	
+
 	return YES;
 }
 
 - (void)incrementUseCount {
 	// get the app's version
 	NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
-	
+
 	// get the version number that we've been tracking
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	NSString *trackingVersion = [userDefaults stringForKey:kAppiraterCurrentVersion];
+	NSString *trackingVersion = [userDefaults stringForKey:kGCAppiraterCurrentVersion];
 	if (trackingVersion == nil)
 	{
 		trackingVersion = version;
-		[userDefaults setObject:version forKey:kAppiraterCurrentVersion];
+		[userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
 	}
-	
+
 	if (_debug)
 		NSLog(@"APPIRATER Tracking version: %@", trackingVersion);
-	
+
 	if ([trackingVersion isEqualToString:version])
 	{
 		// check if the first use date has been set. if not, set it.
-		NSTimeInterval timeInterval = [userDefaults doubleForKey:kAppiraterFirstUseDate];
+		NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
 		if (timeInterval == 0)
 		{
 			timeInterval = [[NSDate date] timeIntervalSince1970];
-			[userDefaults setDouble:timeInterval forKey:kAppiraterFirstUseDate];
+			[userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
 		}
-		
+
 		// increment the use count
-		NSInteger useCount = [userDefaults integerForKey:kAppiraterUseCount];
+		NSInteger useCount = [userDefaults integerForKey:kGCAppiraterUseCount];
 		useCount++;
-		[userDefaults setInteger:useCount forKey:kAppiraterUseCount];
+		[userDefaults setInteger:useCount forKey:kGCAppiraterUseCount];
 		if (_debug)
 			NSLog(@"APPIRATER Use count: %@", @(useCount));
 	}
 	else
 	{
 		// it's a new version of the app, so restart tracking
-		[userDefaults setObject:version forKey:kAppiraterCurrentVersion];
-		[userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kAppiraterFirstUseDate];
-		[userDefaults setInteger:1 forKey:kAppiraterUseCount];
-		[userDefaults setInteger:0 forKey:kAppiraterSignificantEventCount];
-		[userDefaults setBool:NO forKey:kAppiraterRatedCurrentVersion];
-		[userDefaults setBool:NO forKey:kAppiraterDeclinedToRate];
-		[userDefaults setDouble:0 forKey:kAppiraterReminderRequestDate];
+		[userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
+		[userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kGCAppiraterFirstUseDate];
+		[userDefaults setInteger:1 forKey:kGCAppiraterUseCount];
+		[userDefaults setInteger:0 forKey:kGCAppiraterSignificantEventCount];
+		[userDefaults setBool:NO forKey:kGCAppiraterRatedCurrentVersion];
+		[userDefaults setBool:NO forKey:kGCAppiraterDeclinedToRate];
+		[userDefaults setDouble:0 forKey:kGCAppiraterReminderRequestDate];
 	}
-	
+
 	[userDefaults synchronize];
 }
 
 - (void)incrementSignificantEventCount {
 	// get the app's version
 	NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
-	
+
 	// get the version number that we've been tracking
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	NSString *trackingVersion = [userDefaults stringForKey:kAppiraterCurrentVersion];
+	NSString *trackingVersion = [userDefaults stringForKey:kGCAppiraterCurrentVersion];
 	if (trackingVersion == nil)
 	{
 		trackingVersion = version;
-		[userDefaults setObject:version forKey:kAppiraterCurrentVersion];
+		[userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
 	}
-	
+
 	if (_debug)
 		NSLog(@"APPIRATER Tracking version: %@", trackingVersion);
-	
+
 	if ([trackingVersion isEqualToString:version])
 	{
 		// check if the first use date has been set. if not, set it.
-		NSTimeInterval timeInterval = [userDefaults doubleForKey:kAppiraterFirstUseDate];
+		NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
 		if (timeInterval == 0)
 		{
 			timeInterval = [[NSDate date] timeIntervalSince1970];
-			[userDefaults setDouble:timeInterval forKey:kAppiraterFirstUseDate];
+			[userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
 		}
-		
+
 		// increment the significant event count
-		NSInteger sigEventCount = [userDefaults integerForKey:kAppiraterSignificantEventCount];
+		NSInteger sigEventCount = [userDefaults integerForKey:kGCAppiraterSignificantEventCount];
 		sigEventCount++;
-		[userDefaults setInteger:sigEventCount forKey:kAppiraterSignificantEventCount];
+		[userDefaults setInteger:sigEventCount forKey:kGCAppiraterSignificantEventCount];
 		if (_debug)
 			NSLog(@"APPIRATER Significant event count: %@", @(sigEventCount));
 	}
 	else
 	{
 		// it's a new version of the app, so restart tracking
-		[userDefaults setObject:version forKey:kAppiraterCurrentVersion];
-		[userDefaults setDouble:0 forKey:kAppiraterFirstUseDate];
-		[userDefaults setInteger:0 forKey:kAppiraterUseCount];
-		[userDefaults setInteger:1 forKey:kAppiraterSignificantEventCount];
-		[userDefaults setBool:NO forKey:kAppiraterRatedCurrentVersion];
-		[userDefaults setBool:NO forKey:kAppiraterDeclinedToRate];
-		[userDefaults setDouble:0 forKey:kAppiraterReminderRequestDate];
+		[userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
+		[userDefaults setDouble:0 forKey:kGCAppiraterFirstUseDate];
+		[userDefaults setInteger:0 forKey:kGCAppiraterUseCount];
+		[userDefaults setInteger:1 forKey:kGCAppiraterSignificantEventCount];
+		[userDefaults setBool:NO forKey:kGCAppiraterRatedCurrentVersion];
+		[userDefaults setBool:NO forKey:kGCAppiraterDeclinedToRate];
+		[userDefaults setDouble:0 forKey:kGCAppiraterReminderRequestDate];
 	}
-	
+
 	[userDefaults synchronize];
 }
 
 - (void)incrementAndRate:(BOOL)canPromptForRating {
 	[self incrementUseCount];
-	
+
 	if (canPromptForRating &&
         [self ratingConditionsHaveBeenMet] &&
         [self ratingAlertIsAppropriate])
@@ -478,7 +478,7 @@ static BOOL _alwaysUseMainBundle = NO;
 
 - (void)incrementSignificantEventAndRate:(BOOL)canPromptForRating {
 	[self incrementSignificantEventCount];
-	
+
     if (canPromptForRating &&
         [self ratingConditionsHaveBeenMet] &&
         [self ratingAlertIsAppropriate])
@@ -491,31 +491,31 @@ static BOOL _alwaysUseMainBundle = NO;
 }
 
 - (BOOL)userHasDeclinedToRate {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:kAppiraterDeclinedToRate];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:kGCAppiraterDeclinedToRate];
 }
 
 - (BOOL)userHasRatedCurrentVersion {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:kAppiraterRatedCurrentVersion];
+    return [[NSUserDefaults standardUserDefaults] boolForKey:kGCAppiraterRatedCurrentVersion];
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-implementations"
 + (void)appLaunched {
-	[Appirater appLaunched:YES];
+	[[self class] appLaunched:YES];
 }
 #pragma GCC diagnostic pop
 
 + (void)appLaunched:(BOOL)canPromptForRating {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                    ^{
-                       Appirater *a = [Appirater sharedInstance];
+                       GCAppirater *a = [[self class] sharedInstance];
                        if (_debug) {
                            dispatch_async(dispatch_get_main_queue(),
                                           ^{
                                               [a showRatingAlert];
                                           });
                        } else {
-                           [a incrementAndRate:canPromptForRating]; 
+                           [a incrementAndRate:canPromptForRating];
                        }
                    });
 }
@@ -525,43 +525,43 @@ static BOOL _alwaysUseMainBundle = NO;
 		if (_debug)
 			NSLog(@"APPIRATER Hiding Alert");
 		[self.ratingAlert dismissWithClickedButtonIndex:-1 animated:NO];
-	}	
+	}
 }
 
 + (void)appWillResignActive {
 	if (_debug)
 		NSLog(@"APPIRATER appWillResignActive");
-	[[Appirater sharedInstance] hideRatingAlert];
+	[[[self class] sharedInstance] hideRatingAlert];
 }
 
 + (void)appEnteredForeground:(BOOL)canPromptForRating {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                    ^{
-                       [[Appirater sharedInstance] incrementAndRate:canPromptForRating];
+                       [[[self class] sharedInstance] incrementAndRate:canPromptForRating];
                    });
 }
 
 + (void)userDidSignificantEvent:(BOOL)canPromptForRating {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                    ^{
-                       [[Appirater sharedInstance] incrementSignificantEventAndRate:canPromptForRating];
+                       [[[self class] sharedInstance] incrementSignificantEventAndRate:canPromptForRating];
                    });
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-implementations"
 + (void)showPrompt {
-  [Appirater tryToShowPrompt];
+  [[self class] tryToShowPrompt];
 }
 #pragma GCC diagnostic pop
 
 + (void)tryToShowPrompt {
-  [[Appirater sharedInstance] showPromptWithChecks:true
+  [[[self class] sharedInstance] showPromptWithChecks:true
                             displayRateLaterButton:true];
 }
 
 + (void)forceShowPrompt:(BOOL)displayRateLaterButton {
-  [[Appirater sharedInstance] showPromptWithChecks:false
+  [[[self class] sharedInstance] showPromptWithChecks:false
                             displayRateLaterButton:displayRateLaterButton];
 }
 
@@ -582,8 +582,8 @@ static BOOL _alwaysUseMainBundle = NO;
             }
         }
     }
-    
-    return [Appirater iterateSubViewsForViewController:window]; // iOS 8+ deep traverse
+
+    return [[self class] iterateSubViewsForViewController:window]; // iOS 8+ deep traverse
 }
 
 + (id)iterateSubViewsForViewController:(UIView *) parentView {
@@ -592,7 +592,7 @@ static BOOL _alwaysUseMainBundle = NO;
         if([responder isKindOfClass:[UIViewController class]]) {
             return [self topMostViewController: (UIViewController *) responder];
         }
-        id found = [Appirater iterateSubViewsForViewController:subView];
+        id found = [[self class] iterateSubViewsForViewController:subView];
         if( nil != found) {
             return found;
         }
@@ -609,27 +609,27 @@ static BOOL _alwaysUseMainBundle = NO;
 		if(presented != nil) {
 			controller = presented;
 		}
-		
+
 	} while (isPresenting);
-	
+
 	return controller;
 }
 
 + (void)rateApp {
-	
+
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-	[userDefaults setBool:YES forKey:kAppiraterRatedCurrentVersion];
+	[userDefaults setBool:YES forKey:kGCAppiraterRatedCurrentVersion];
 	[userDefaults synchronize];
 
 	//Use the in-app StoreKit view if available (iOS 6) and imported. This works in the simulator.
-	if (![Appirater sharedInstance].openInAppStore && NSStringFromClass([SKStoreProductViewController class]) != nil) {
-		
+	if (![[self class] sharedInstance].openInAppStore && NSStringFromClass([SKStoreProductViewController class]) != nil) {
+
 		SKStoreProductViewController *storeViewController = [[SKStoreProductViewController alloc] init];
 		NSNumber *appId = [NSNumber numberWithInteger:_appId.integerValue];
 		[storeViewController loadProductWithParameters:@{SKStoreProductParameterITunesItemIdentifier:appId} completionBlock:nil];
 		storeViewController.delegate = self.sharedInstance;
-        
-        id <AppiraterDelegate> delegate = self.sharedInstance.delegate;
+
+        id <GCAppiraterDelegate> delegate = self.sharedInstance.delegate;
 		if ([delegate respondsToSelector:@selector(appiraterWillPresentModalView:animated:)]) {
 			[delegate appiraterWillPresentModalView:self.sharedInstance animated:_usesAnimation];
 		}
@@ -641,10 +641,10 @@ static BOOL _alwaysUseMainBundle = NO;
 			[[UIApplication sharedApplication]setStatusBarStyle:UIStatusBarStyleLightContent animated:_usesAnimation];
 #endif
 		}];
-	
+
 	//Use the standard openUrl method if StoreKit is unavailable.
 	} else {
-		
+
 		#if TARGET_IPHONE_SIMULATOR
 		NSLog(@"APPIRATER NOTE: iTunes App Store is not supported on the iOS simulator. Unable to open App Store page.");
 		#else
@@ -668,14 +668,14 @@ static BOOL _alwaysUseMainBundle = NO;
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    
-    id <AppiraterDelegate> delegate = _delegate;
-	
+
+    id <GCAppiraterDelegate> delegate = _delegate;
+
 	switch (buttonIndex) {
 		case 0:
 		{
 			// they don't want to rate it
-			[userDefaults setBool:YES forKey:kAppiraterDeclinedToRate];
+			[userDefaults setBool:YES forKey:kGCAppiraterDeclinedToRate];
 			[userDefaults synchronize];
 			if(delegate && [delegate respondsToSelector:@selector(appiraterDidDeclineToRate:)]){
 				[delegate appiraterDidDeclineToRate:self];
@@ -685,7 +685,7 @@ static BOOL _alwaysUseMainBundle = NO;
 		case 1:
 		{
 			// they want to rate it
-			[Appirater rateApp];
+			[[self class] rateApp];
 			if(delegate&& [delegate respondsToSelector:@selector(appiraterDidOptToRate:)]){
 				[delegate appiraterDidOptToRate:self];
 			}
@@ -693,7 +693,7 @@ static BOOL _alwaysUseMainBundle = NO;
 		}
 		case 2:
 			// remind them later
-			[userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kAppiraterReminderRequestDate];
+			[userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kGCAppiraterReminderRequestDate];
 			[userDefaults synchronize];
 			if(delegate && [delegate respondsToSelector:@selector(appiraterDidOptToRemindLater:)]){
 				[delegate appiraterDidOptToRemindLater:self];
@@ -706,7 +706,7 @@ static BOOL _alwaysUseMainBundle = NO;
 
 //Delegate call from the StoreKit view.
 - (void)productViewControllerDidFinish:(SKStoreProductViewController *)viewController {
-	[Appirater closeModal];
+	[[self class] closeModal];
 }
 
 //Close the in-app rating (StoreKit) view and restore the previous status bar style.
@@ -715,14 +715,14 @@ static BOOL _alwaysUseMainBundle = NO;
 		[[UIApplication sharedApplication]setStatusBarStyle:_statusBarStyle animated:_usesAnimation];
 		BOOL usedAnimation = _usesAnimation;
 		[self setModalOpen:NO];
-		
+
 		// get the top most controller (= the StoreKit Controller) and dismiss it
 		UIViewController *presentingController = [UIApplication sharedApplication].keyWindow.rootViewController;
 		presentingController = [self topMostViewController: presentingController];
 		[presentingController dismissViewControllerAnimated:_usesAnimation completion:^{
-            id <AppiraterDelegate> delegate = self.sharedInstance.delegate;
+            id <GCAppiraterDelegate> delegate = self.sharedInstance.delegate;
 			if ([delegate respondsToSelector:@selector(appiraterDidDismissModalView:animated:)]) {
-				[delegate appiraterDidDismissModalView:(Appirater *)self animated:usedAnimation];
+				[delegate appiraterDidDismissModalView:(GCAppirater *)self animated:usedAnimation];
 			}
 		}];
 		[self.class setStatusBarStyle:(UIStatusBarStyle)nil];
