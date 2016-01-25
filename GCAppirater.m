@@ -181,27 +181,27 @@ static BOOL _alwaysUseMainBundle = NO;
 
 - (NSString *)alertTitle
 {
-    return _alertTitle ? _alertTitle : APPIRATER_MESSAGE_TITLE;
+    return _alertTitle ? _alertTitle : GC_APPIRATER_MESSAGE_TITLE;
 }
 
 - (NSString *)alertMessage
 {
-    return _alertMessage ? _alertMessage : APPIRATER_MESSAGE;
+    return _alertMessage ? _alertMessage : GC_APPIRATER_MESSAGE;
 }
 
 - (NSString *)alertCancelTitle
 {
-    return _alertCancelTitle ? _alertCancelTitle : APPIRATER_CANCEL_BUTTON;
+    return _alertCancelTitle ? _alertCancelTitle : GC_APPIRATER_CANCEL_BUTTON;
 }
 
 - (NSString *)alertRateTitle
 {
-    return _alertRateTitle ? _alertRateTitle : APPIRATER_RATE_BUTTON;
+    return _alertRateTitle ? _alertRateTitle : GC_APPIRATER_RATE_BUTTON;
 }
 
 - (NSString *)alertRateLaterTitle
 {
-    return _alertRateLaterTitle ? _alertRateLaterTitle : APPIRATER_RATE_LATER;
+    return _alertRateLaterTitle ? _alertRateLaterTitle : GC_APPIRATER_RATE_LATER;
 }
 
 - (void)dealloc {
