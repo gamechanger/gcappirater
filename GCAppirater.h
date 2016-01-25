@@ -38,13 +38,13 @@
 #import "GCAppiraterDelegate.h"
 #import <StoreKit/StoreKit.h>
 
-extern NSString *const kAppiraterFirstUseDate;
-extern NSString *const kAppiraterUseCount;
-extern NSString *const kAppiraterSignificantEventCount;
-extern NSString *const kAppiraterCurrentVersion;
-extern NSString *const kAppiraterRatedCurrentVersion;
-extern NSString *const kAppiraterDeclinedToRate;
-extern NSString *const kAppiraterReminderRequestDate;
+extern NSString *const kGCAppiraterFirstUseDate;
+extern NSString *const kGCAppiraterUseCount;
+extern NSString *const kGCAppiraterSignificantEventCount;
+extern NSString *const kGCAppiraterCurrentVersion;
+extern NSString *const kGCAppiraterRatedCurrentVersion;
+extern NSString *const kGCAppiraterDeclinedToRate;
+extern NSString *const kGCAppiraterReminderRequestDate;
 
 /*!
  Your localized app's name.
