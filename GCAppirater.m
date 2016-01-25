@@ -88,7 +88,7 @@ static BOOL _alwaysUseMainBundle = NO;
 - (void)hideRatingAlert;
 @end
 
-@implementation Appirater
+@implementation GCAppirater
 
 @synthesize ratingAlert;
 
@@ -166,10 +166,10 @@ static BOOL _alwaysUseMainBundle = NO;
     if (_alwaysUseMainBundle) {
         bundle = [NSBundle mainBundle];
     } else {
-        NSURL *appiraterBundleURL = [[NSBundle mainBundle] URLForResource:@"Appirater" withExtension:@"bundle"];
+        NSURL *appiraterBundleURL = [[NSBundle mainBundle] URLForResource:@"GCAppirater" withExtension:@"bundle"];
 
         if (appiraterBundleURL) {
-            // Appirater.bundle will likely only exist when used via CocoaPods
+            // GCAppirater.bundle will likely only exist when used via CocoaPods
             bundle = [NSBundle bundleWithURL:appiraterBundleURL];
         } else {
             bundle = [NSBundle mainBundle];
@@ -252,8 +252,8 @@ static BOOL _alwaysUseMainBundle = NO;
     return ((isReachable && !needsConnection) || nonWiFi) ? (testConnection ? YES : NO) : NO;
 }
 
-+ (Appirater*)sharedInstance {
-	static Appirater *appirater = nil;
++ (GCAppirater*)sharedInstance {
+	static GCAppirater *appirater = nil;
 	if (appirater == nil)
 	{
         static dispatch_once_t onceToken;
@@ -508,7 +508,7 @@ static BOOL _alwaysUseMainBundle = NO;
 + (void)appLaunched:(BOOL)canPromptForRating {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                    ^{
-                       Appirater *a = [[this class] sharedInstance];
+                       GCAppirater *a = [[this class] sharedInstance];
                        if (_debug) {
                            dispatch_async(dispatch_get_main_queue(),
                                           ^{
@@ -722,7 +722,7 @@ static BOOL _alwaysUseMainBundle = NO;
 		[presentingController dismissViewControllerAnimated:_usesAnimation completion:^{
             id <GCAppiraterDelegate> delegate = self.sharedInstance.delegate;
 			if ([delegate respondsToSelector:@selector(appiraterDidDismissModalView:animated:)]) {
-				[delegate appiraterDidDismissModalView:(Appirater *)self animated:usedAnimation];
+				[delegate appiraterDidDismissModalView:(GCAppirater *)self animated:usedAnimation];
 			}
 		}];
 		[self.class setStatusBarStyle:(UIStatusBarStyle)nil];
