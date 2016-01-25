@@ -1,5 +1,5 @@
 //
-//  AppiraterDelegate.h
+//  GCAppiraterDelegate.h
 //  Banana Stand
 //
 //  Created by Robert Haining on 9/25/12.
@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
-@class Appirater;
+@class GCAppirater;
 
-@protocol AppiraterDelegate <NSObject>
+@protocol GCAppiraterDelegate <NSObject>
 
 @optional
 -(BOOL)appiraterShouldDisplayAlert:(Appirater *)appirater;
