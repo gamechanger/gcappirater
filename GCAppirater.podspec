@@ -1,10 +1,10 @@
 Pod::Spec.new do |s|
   s.name         = "GCAppirater"
-  s.version      = "3.0.1"
+  s.version      = "3.0.2"
   s.summary      = "GC fork of Appirater."
   s.homepage     = "https://github.com/gamechanger/gcappirater.git"
   s.author       = { "Brian Bernberg" => "brian@gc.com" }
-  s.source       = { :git => "https://github.com/gamechanger/gcappirater.git", :tag => "3.0.1" }
+  s.source       = { :git => "https://github.com/gamechanger/gcappirater.git", :tag => "3.0.2" }
   s.source_files = "*.{h,m}"
   s.frameworks = 'CFNetwork', 'SystemConfiguration'
   s.weak_framework = 'StoreKit'
