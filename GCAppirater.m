@@ -574,7 +574,7 @@ typedef enum GCRatingAlertType {
                                                             [weakSelf showAlertOfType:GCRatingAlertTypeBetter];
                                                           }];
   UIAlertAction *yesAction = [UIAlertAction actionWithTitle:@"Yes!"
-                                                      style:UIAlertActionStyleDefault
+                                                      style:UIAlertActionStyleCancel
                                                     handler:^(UIAlertAction *action) {
                                                       if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForEnjoyingAlert:)] ) {
                                                         [weakSelf.delegate appiraterChoseYesForEnjoyingAlert:weakSelf];
@@ -593,15 +593,15 @@ typedef enum GCRatingAlertType {
                                                           preferredStyle:UIAlertControllerStyleAlert];
   __weak GCAppirater *weakSelf = self;
   
-  UIAlertAction *noAction = [UIAlertAction actionWithTitle:@"No, thanks"
+  UIAlertAction *noAction = [UIAlertAction actionWithTitle:@"No, thanks."
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
                                                      if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForBetterAlert:)] ) {
                                                        [weakSelf.delegate appiraterChoseNoForBetterAlert:weakSelf];
                                                      }
                                                    }];
-  UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure"
-                                                       style:UIAlertActionStyleDefault
+  UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure."
+                                                       style:UIAlertActionStyleCancel
                                                      handler:^(UIAlertAction *action) {
                                                        [weakSelf.delegate appiraterChoseYesForBetterAlert:weakSelf];
                                                      }];
@@ -618,7 +618,7 @@ typedef enum GCRatingAlertType {
   __weak GCAppirater *weakSelf = self;
   
   UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure!"
-                                                       style:UIAlertActionStyleDefault
+                                                       style:UIAlertActionStyleCancel
                                                      handler:^(UIAlertAction *action) {
                                                        [[self class] rateApp];
                                                        if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForRatingAlert:)] ) {
