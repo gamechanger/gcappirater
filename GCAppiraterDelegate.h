@@ -11,13 +11,20 @@
 @class GCAppirater;
 
 @protocol GCAppiraterDelegate <NSObject>
+@required
+-(void)appiraterChoseYesForBetterAlert:(GCAppirater *)appirater;
 
 @optional
 -(BOOL)appiraterShouldDisplayAlert:(GCAppirater *)appirater;
 -(void)appiraterDidDisplayAlert:(GCAppirater *)appirater;
--(void)appiraterDidDeclineToRate:(GCAppirater *)appirater;
--(void)appiraterDidOptToRate:(GCAppirater *)appirater;
--(void)appiraterDidOptToRemindLater:(GCAppirater *)appirater;
--(void)appiraterWillPresentModalView:(GCAppirater *)appirater animated:(BOOL)animated;
--(void)appiraterDidDismissModalView:(GCAppirater *)appirater animated:(BOOL)animated;
+
+-(void)appiraterChoseYesForEnjoyingAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseNoForEnjoyingAlert:(GCAppirater *)appirater;
+
+-(void)appiraterChoseNoForBetterAlert:(GCAppirater *)appirater;
+
+-(void)appiraterChoseYesForRatingAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseLaterForRatingAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseNoForRatingAlert:(GCAppirater *)appirater;
+
 @end
