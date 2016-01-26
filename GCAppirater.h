@@ -84,7 +84,7 @@ extern NSString *const kGCAppiraterReminderRequestDate;
  */
 #define GC_APPIRATER_RATE_LATER			NSLocalizedStringFromTableInBundle(@"Remind me later", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
 
-@interface GCAppirater : NSObject <UIAlertViewDelegate>
+@interface GCAppirater : NSObject
 
 #if __has_feature(objc_arc_weak)
 @property(nonatomic, weak) NSObject <GCAppiraterDelegate> *delegate;
