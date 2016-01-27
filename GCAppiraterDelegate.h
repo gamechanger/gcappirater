@@ -12,19 +12,19 @@
 
 @protocol GCAppiraterDelegate <NSObject>
 @required
--(void)appiraterChoseYesForBetterAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseYesForBetterAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
 
 @optional
 -(BOOL)appiraterShouldDisplayAlert:(GCAppirater *)appirater;
 -(void)appiraterDidDisplayAlert:(GCAppirater *)appirater;
 
--(void)appiraterChoseYesForEnjoyingAlert:(GCAppirater *)appirater;
--(void)appiraterChoseNoForEnjoyingAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseYesForEnjoyingAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
+-(void)appiraterChoseNoForEnjoyingAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
 
--(void)appiraterChoseNoForBetterAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseNoForBetterAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
 
--(void)appiraterChoseYesForRatingAlert:(GCAppirater *)appirater;
--(void)appiraterChoseLaterForRatingAlert:(GCAppirater *)appirater;
--(void)appiraterChoseNoForRatingAlert:(GCAppirater *)appirater;
+-(void)appiraterChoseYesForRatingAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
+-(void)appiraterChoseLaterForRatingAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
+-(void)appiraterChoseNoForRatingAlert:(GCAppirater *)appirater eventName:(NSString *)eventName;
 
 @end

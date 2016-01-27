@@ -74,6 +74,7 @@ typedef enum GCRatingAlertType {
 @interface GCAppirater ()
 
 @property (nonatomic, strong) UIAlertController *alertController;
+@property (nonatomic, strong) NSString *lastEventName;
 
 @end
 
@@ -420,14 +421,10 @@ typedef enum GCRatingAlertType {
   return [[NSUserDefaults standardUserDefaults] boolForKey:kGCAppiraterRatedCurrentVersion];
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-implementations"
-+ (void)appLaunched {
-  [[self class] appLaunched:YES];
-}
 #pragma GCC diagnostic pop
 
 + (void)appLaunched:(BOOL)canPromptForRating {
+  [[self class] sharedInstance].lastEventName = nil;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                  ^{
                    GCAppirater *a = [[self class] sharedInstance];
@@ -457,6 +454,7 @@ typedef enum GCRatingAlertType {
 }
 
 + (void)appEnteredForeground:(BOOL)canPromptForRating {
+  [[self class] sharedInstance].lastEventName = nil;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                  ^{
                    [[[self class] sharedInstance] incrementAndRate:canPromptForRating];
@@ -464,24 +462,26 @@ typedef enum GCRatingAlertType {
 }
 
 + (void)userDidSignificantEvent:(BOOL)canPromptForRating {
+  [[self class] userDidSignificantEvent:canPromptForRating eventName:nil];
+}
+
++ (void)userDidSignificantEvent:(BOOL)canPromptForRating eventName:(NSString *)eventName {
+  [[self class] sharedInstance].lastEventName = eventName;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0),
                  ^{
                    [[[self class] sharedInstance] incrementSignificantEventAndRate:canPromptForRating];
                  });
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-implementations"
-+ (void)showPrompt {
-  [[self class] tryToShowPrompt];
-}
 #pragma GCC diagnostic pop
 
 + (void)tryToShowPrompt {
+  [[self class] sharedInstance].lastEventName = nil;
   [[[self class] sharedInstance] showPromptWithChecks:true];
 }
 
 + (void)forceShowPrompt {
+  [[self class] sharedInstance].lastEventName = nil;
   [[[self class] sharedInstance] showPromptWithChecks:false];
 }
 
@@ -568,16 +568,16 @@ typedef enum GCRatingAlertType {
                                                             NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
                                                             [userDefaults setBool:YES forKey:kGCAppiraterDeclinedToRate];
                                                             [userDefaults synchronize];
-                                                            if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForEnjoyingAlert:)] ) {
-                                                              [weakSelf.delegate appiraterChoseNoForEnjoyingAlert:weakSelf];
+                                                            if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForEnjoyingAlert:eventName:)] ) {
+                                                              [weakSelf.delegate appiraterChoseNoForEnjoyingAlert:weakSelf eventName:self.lastEventName];
                                                             }
                                                             [weakSelf showAlertOfType:GCRatingAlertTypeBetter];
                                                           }];
   UIAlertAction *yesAction = [UIAlertAction actionWithTitle:@"Yes!"
                                                       style:UIAlertActionStyleCancel
                                                     handler:^(UIAlertAction *action) {
-                                                      if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForEnjoyingAlert:)] ) {
-                                                        [weakSelf.delegate appiraterChoseYesForEnjoyingAlert:weakSelf];
+                                                      if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForEnjoyingAlert:eventName:)] ) {
+                                                        [weakSelf.delegate appiraterChoseYesForEnjoyingAlert:weakSelf eventName:self.lastEventName];
                                                       }
                                                       [weakSelf showAlertOfType:GCRatingAlertTypeRate];
                                                     }];
@@ -596,14 +596,14 @@ typedef enum GCRatingAlertType {
   UIAlertAction *noAction = [UIAlertAction actionWithTitle:@"No, thanks."
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
-                                                     if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForBetterAlert:)] ) {
-                                                       [weakSelf.delegate appiraterChoseNoForBetterAlert:weakSelf];
+                                                     if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForBetterAlert:eventName:)] ) {
+                                                       [weakSelf.delegate appiraterChoseNoForBetterAlert:weakSelf eventName:self.lastEventName];
                                                      }
                                                    }];
   UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure."
                                                        style:UIAlertActionStyleCancel
                                                      handler:^(UIAlertAction *action) {
-                                                       [weakSelf.delegate appiraterChoseYesForBetterAlert:weakSelf];
+                                                       [weakSelf.delegate appiraterChoseYesForBetterAlert:weakSelf eventName:self.lastEventName];
                                                      }];
   
   [alert addAction:noAction];
@@ -621,8 +621,8 @@ typedef enum GCRatingAlertType {
                                                        style:UIAlertActionStyleCancel
                                                      handler:^(UIAlertAction *action) {
                                                        [[self class] rateApp];
-                                                       if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForRatingAlert:)] ) {
-                                                         [weakSelf.delegate appiraterChoseYesForRatingAlert:weakSelf];
+                                                       if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForRatingAlert:eventName:)] ) {
+                                                         [weakSelf.delegate appiraterChoseYesForRatingAlert:weakSelf eventName:self.lastEventName];
                                                        }
                                                      }];
   UIAlertAction *remindAction = [UIAlertAction actionWithTitle:@"Remind me later."
@@ -631,8 +631,8 @@ typedef enum GCRatingAlertType {
                                                          NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
                                                          [userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kGCAppiraterReminderRequestDate];
                                                          [userDefaults synchronize];
-                                                         if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseLaterForRatingAlert:)] ) {
-                                                           [weakSelf.delegate appiraterChoseLaterForRatingAlert:weakSelf];
+                                                         if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseLaterForRatingAlert:eventName:)] ) {
+                                                           [weakSelf.delegate appiraterChoseLaterForRatingAlert:weakSelf eventName:self.lastEventName];
                                                          }
                                                        }];
   UIAlertAction *noAction = [UIAlertAction actionWithTitle:@"No, thanks."
@@ -641,8 +641,8 @@ typedef enum GCRatingAlertType {
                                                      NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
                                                      [userDefaults setBool:YES forKey:kGCAppiraterDeclinedToRate];
                                                      [userDefaults synchronize];
-                                                     if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForRatingAlert:)] ) {
-                                                       [weakSelf.delegate appiraterChoseNoForRatingAlert:weakSelf];
+                                                     if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForRatingAlert:eventName:)] ) {
+                                                       [weakSelf.delegate appiraterChoseNoForRatingAlert:weakSelf eventName:self.lastEventName];
                                                      }
                                                    }];
   

@@ -45,44 +45,6 @@ extern NSString *const kGCAppiraterRatedCurrentVersion;
 extern NSString *const kGCAppiraterDeclinedToRate;
 extern NSString *const kGCAppiraterReminderRequestDate;
 
-/*!
- Your localized app's name.
- */
-#define GC_APPIRATER_LOCALIZED_APP_NAME    [[[NSBundle mainBundle] localizedInfoDictionary] objectForKey:@"CFBundleDisplayName"]
-
-/*!
- Your app's name.
- */
-#define GC_APPIRATER_APP_NAME				GC_APPIRATER_LOCALIZED_APP_NAME ?: [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"] ?: [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"]
-
-/*!
- This is the message your users will see once they've passed the day+launches
- threshold.
- */
-#define GC_APPIRATER_LOCALIZED_MESSAGE     NSLocalizedStringFromTableInBundle(@"If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
-#define GC_APPIRATER_MESSAGE				[NSString stringWithFormat:GC_APPIRATER_LOCALIZED_MESSAGE, GC_APPIRATER_APP_NAME]
-
-/*!
- This is the title of the message alert that users will see.
- */
-#define GC_APPIRATER_LOCALIZED_MESSAGE_TITLE   NSLocalizedStringFromTableInBundle(@"Rate %@", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
-#define GC_APPIRATER_MESSAGE_TITLE             [NSString stringWithFormat:GC_APPIRATER_LOCALIZED_MESSAGE_TITLE, GC_APPIRATER_APP_NAME]
-
-/*!
- The text of the button that rejects reviewing the app.
- */
-#define GC_APPIRATER_CANCEL_BUTTON			NSLocalizedStringFromTableInBundle(@"No, Thanks", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
-
-/*!
- Text of button that will send user to app review page.
- */
-#define GC_APPIRATER_LOCALIZED_RATE_BUTTON NSLocalizedStringFromTableInBundle(@"Rate %@", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
-#define GC_APPIRATER_RATE_BUTTON			[NSString stringWithFormat:GC_APPIRATER_LOCALIZED_RATE_BUTTON, GC_APPIRATER_APP_NAME]
-
-/*!
- Text for button to remind the user to review later.
- */
-#define GC_APPIRATER_RATE_LATER			NSLocalizedStringFromTableInBundle(@"Remind me later", @"GCAppiraterLocalizable", [GCAppirater bundle], nil)
 
 @interface GCAppirater : NSObject
 
@@ -136,6 +98,7 @@ extern NSString *const kGCAppiraterReminderRequestDate;
  in those methods).
  */
 + (void)userDidSignificantEvent:(BOOL)canPromptForRating;
++ (void)userDidSignificantEvent:(BOOL)canPromptForRating eventName:(NSString *)eventName;
 
 /*!
  Tells Appirater to try and show the prompt (a rating alert). The prompt will be showed
@@ -261,25 +224,5 @@ extern NSString *const kGCAppiraterReminderRequestDate;
  The bundle localized strings will be loaded from.
  */
 +(NSBundle *)bundle;
-
-@end
-
-@interface GCAppirater(Deprecated)
-
-/*!
- DEPRECATED: While still functional, it's better to use
- appLaunched:(BOOL)canPromptForRating instead.
- 
- Calls [Appirater appLaunched:YES]. See appLaunched: for details of functionality.
- */
-+ (void)appLaunched __attribute__((deprecated));
-
-/*!
- DEPRECATED: While still functional, it's better to use
- tryToShowPrompt instead.
- 
- Calls [Appirater tryToShowPrompt]. See tryToShowPrompt for details of functionality.
- */
-+ (void)showPrompt __attribute__((deprecated));
 
 @end
