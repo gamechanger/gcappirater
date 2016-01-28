@@ -574,7 +574,7 @@ typedef enum GCRatingAlertType {
                                                             [weakSelf showAlertOfType:GCRatingAlertTypeBetter];
                                                           }];
   UIAlertAction *yesAction = [UIAlertAction actionWithTitle:@"Yes!"
-                                                      style:UIAlertActionStyleCancel
+                                                      style:UIAlertActionStyleDefault
                                                     handler:^(UIAlertAction *action) {
                                                       if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForEnjoyingAlert:eventName:)] ) {
                                                         [weakSelf.delegate appiraterChoseYesForEnjoyingAlert:weakSelf eventName:self.lastEventName];
@@ -584,6 +584,7 @@ typedef enum GCRatingAlertType {
   
   [alert addAction:notReallyAction];
   [alert addAction:yesAction];
+  
   return alert;
 }
 
@@ -601,7 +602,7 @@ typedef enum GCRatingAlertType {
                                                      }
                                                    }];
   UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure."
-                                                       style:UIAlertActionStyleCancel
+                                                       style:UIAlertActionStyleDefault
                                                      handler:^(UIAlertAction *action) {
                                                        [weakSelf.delegate appiraterChoseYesForBetterAlert:weakSelf eventName:self.lastEventName];
                                                      }];
@@ -618,7 +619,7 @@ typedef enum GCRatingAlertType {
   __weak GCAppirater *weakSelf = self;
   
   UIAlertAction *sureAction = [UIAlertAction actionWithTitle:@"Sure!"
-                                                       style:UIAlertActionStyleCancel
+                                                       style:UIAlertActionStyleDefault
                                                      handler:^(UIAlertAction *action) {
                                                        [[self class] rateApp];
                                                        if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseYesForRatingAlert:eventName:)] ) {
