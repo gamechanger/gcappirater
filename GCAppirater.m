@@ -45,10 +45,12 @@
 NSString *const kGCAppiraterFirstUseDate				= @"kGCAppiraterFirstUseDate";
 NSString *const kGCAppiraterUseCount					= @"kGCAppiraterUseCount";
 NSString *const kGCAppiraterSignificantEventCount		= @"kGCAppiraterSignificantEventCount";
-NSString *const kGCAppiraterCurrentVersion			= @"kGCAppiraterCurrentVersion";
-NSString *const kGCAppiraterRatedCurrentVersion		= @"kGCAppiraterRatedCurrentVersion";
-NSString *const kGCAppiraterDeclinedToRate			= @"kGCAppiraterDeclinedToRate";
-NSString *const kGCAppiraterReminderRequestDate		= @"kGCAppiraterReminderRequestDate";
+NSString *const kGCAppiraterUserRated		= @"kGCAppiraterRatedCurrentVersion";
+NSString *const kGCAppiraterUserDeclinedToRate			= @"kGCAppiraterDeclinedToRate";
+NSString *const kGCAppiraterAskAgainDate = @"kGCAppiraterAskAgainDate";
+NSString *const kGCAppiraterReminderRequestVersion		= @"kGCAppiraterReminderRequestVersion";
+
+static NSInteger kGCAppiraterTimeIntervalUntilPromptingAgain = 365 * 24 * 60 * 60; // 1 Year
 
 static NSString *templateReviewURL = @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=APP_ID";
 static NSString *templateReviewURLiOS7 = @"itms-apps://itunes.apple.com/app/idAPP_ID";
@@ -58,7 +60,6 @@ static NSString *_appId;
 static double _daysUntilPrompt = 30;
 static NSInteger _usesUntilPrompt = 20;
 static NSInteger _significantEventsUntilPrompt = -1;
-static double _timeBeforeReminding = 1;
 static BOOL _debug = NO;
 __weak static id<GCAppiraterDelegate> _delegate;
 static UIStatusBarStyle _statusBarStyle;
@@ -94,10 +95,6 @@ typedef enum GCRatingAlertType {
 
 + (void) setSignificantEventsUntilPrompt:(NSInteger)value {
   _significantEventsUntilPrompt = value;
-}
-
-+ (void) setTimeBeforeReminding:(double)value {
-  _timeBeforeReminding = value;
 }
 
 + (void) setDebug:(BOOL)debug {
@@ -226,42 +223,23 @@ typedef enum GCRatingAlertType {
   [self showAlertOfType:GCRatingAlertTypeEnjoying];
 }
 
-// is this an ok time to show the alert? (regardless of whether the rating conditions have been met)
-//
-// things checked here:
-// * connectivity with network
-// * whether user has rated before
-// * whether user has declined to rate
-// * whether rating alert is currently showing visibly
-// things NOT checked here:
-// * time since first launch
-// * number of uses of app
-// * number of significant events
-// * time since last reminder
 - (BOOL)ratingAlertIsAppropriate {
+  [self migrateAppiraterData];
+  
   return ([self connectedToNetwork]
-          && ![self userHasDeclinedToRate]
-          && !self.alertController.presentingViewController
-          && ![self userHasRatedCurrentVersion]);
+          && [self userIsEligibleToRate]
+          && !self.alertController.presentingViewController);
 }
 
-// have the rating conditions been met/earned? (regardless of whether this would be a moment when it's appropriate to show a new rating alert)
-//
-// things checked here:
-// * time since first launch
-// * number of uses of app
-// * number of significant events
-// * time since last reminder
-// things NOT checked here:
-// * connectivity with network
-// * whether user has rated before
-// * whether user has declined to rate
-// * whether rating alert is currently showing visibly
 - (BOOL)ratingConditionsHaveBeenMet {
   if (_debug)
     return YES;
   
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  
+  if ( [self ratingAlertIsAppropriate] == NO ) {
+    return NO;
+  }
   
   NSDate *dateOfFirstLaunch = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kGCAppiraterFirstUseDate]];
   NSTimeInterval timeSinceFirstLaunch = [[NSDate date] timeIntervalSinceDate:dateOfFirstLaunch];
@@ -279,108 +257,54 @@ typedef enum GCRatingAlertType {
   if (sigEventCount < _significantEventsUntilPrompt)
     return NO;
   
-  // if the user wanted to be reminded later, has enough time passed?
-  NSDate *reminderRequestDate = [NSDate dateWithTimeIntervalSince1970:[userDefaults doubleForKey:kGCAppiraterReminderRequestDate]];
-  NSTimeInterval timeSinceReminderRequest = [[NSDate date] timeIntervalSinceDate:reminderRequestDate];
-  NSTimeInterval timeUntilReminder = 60 * 60 * 24 * _timeBeforeReminding;
-  if (timeSinceReminderRequest < timeUntilReminder)
+  // if the user wanted to be reminded later, is it a new version of the app?
+  NSString *remindVersion = [userDefaults stringForKey:kGCAppiraterReminderRequestVersion];
+  NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
+  if ( [remindVersion isEqualToString:version] ) {
     return NO;
+  }
   
   return YES;
 }
 
 - (void)incrementUseCount {
-  // get the app's version
-  NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
-  
-  // get the version number that we've been tracking
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  NSString *trackingVersion = [userDefaults stringForKey:kGCAppiraterCurrentVersion];
-  if (trackingVersion == nil)
+  
+  // check if the first use date has been set. if not, set it.
+  NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
+  if (timeInterval == 0)
   {
-    trackingVersion = version;
-    [userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
+    timeInterval = [[NSDate date] timeIntervalSince1970];
+    [userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
   }
   
+  // increment the use count
+  NSInteger useCount = [userDefaults integerForKey:kGCAppiraterUseCount];
+  useCount++;
+  [userDefaults setInteger:useCount forKey:kGCAppiraterUseCount];
   if (_debug)
-    NSLog(@"APPIRATER Tracking version: %@", trackingVersion);
-  
-  if ([trackingVersion isEqualToString:version])
-  {
-    // check if the first use date has been set. if not, set it.
-    NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
-    if (timeInterval == 0)
-    {
-      timeInterval = [[NSDate date] timeIntervalSince1970];
-      [userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
-    }
-    
-    // increment the use count
-    NSInteger useCount = [userDefaults integerForKey:kGCAppiraterUseCount];
-    useCount++;
-    [userDefaults setInteger:useCount forKey:kGCAppiraterUseCount];
-    if (_debug)
-      NSLog(@"APPIRATER Use count: %@", @(useCount));
-  }
-  else
-  {
-    // it's a new version of the app, so restart tracking
-    [userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
-    [userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kGCAppiraterFirstUseDate];
-    [userDefaults setInteger:1 forKey:kGCAppiraterUseCount];
-    [userDefaults setInteger:0 forKey:kGCAppiraterSignificantEventCount];
-    [userDefaults setBool:NO forKey:kGCAppiraterRatedCurrentVersion];
-    [userDefaults setBool:NO forKey:kGCAppiraterDeclinedToRate];
-    [userDefaults setDouble:0 forKey:kGCAppiraterReminderRequestDate];
-  }
+    NSLog(@"APPIRATER Use count: %@", @(useCount));
   
   [userDefaults synchronize];
 }
 
 - (void)incrementSignificantEventCount {
-  // get the app's version
-  NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
-  
-  // get the version number that we've been tracking
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  NSString *trackingVersion = [userDefaults stringForKey:kGCAppiraterCurrentVersion];
-  if (trackingVersion == nil)
+  
+  // check if the first use date has been set. if not, set it.
+  NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
+  if (timeInterval == 0)
   {
-    trackingVersion = version;
-    [userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
+    timeInterval = [[NSDate date] timeIntervalSince1970];
+    [userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
   }
   
+  // increment the significant event count
+  NSInteger sigEventCount = [userDefaults integerForKey:kGCAppiraterSignificantEventCount];
+  sigEventCount++;
+  [userDefaults setInteger:sigEventCount forKey:kGCAppiraterSignificantEventCount];
   if (_debug)
-    NSLog(@"APPIRATER Tracking version: %@", trackingVersion);
-  
-  if ([trackingVersion isEqualToString:version])
-  {
-    // check if the first use date has been set. if not, set it.
-    NSTimeInterval timeInterval = [userDefaults doubleForKey:kGCAppiraterFirstUseDate];
-    if (timeInterval == 0)
-    {
-      timeInterval = [[NSDate date] timeIntervalSince1970];
-      [userDefaults setDouble:timeInterval forKey:kGCAppiraterFirstUseDate];
-    }
-    
-    // increment the significant event count
-    NSInteger sigEventCount = [userDefaults integerForKey:kGCAppiraterSignificantEventCount];
-    sigEventCount++;
-    [userDefaults setInteger:sigEventCount forKey:kGCAppiraterSignificantEventCount];
-    if (_debug)
-      NSLog(@"APPIRATER Significant event count: %@", @(sigEventCount));
-  }
-  else
-  {
-    // it's a new version of the app, so restart tracking
-    [userDefaults setObject:version forKey:kGCAppiraterCurrentVersion];
-    [userDefaults setDouble:0 forKey:kGCAppiraterFirstUseDate];
-    [userDefaults setInteger:0 forKey:kGCAppiraterUseCount];
-    [userDefaults setInteger:1 forKey:kGCAppiraterSignificantEventCount];
-    [userDefaults setBool:NO forKey:kGCAppiraterRatedCurrentVersion];
-    [userDefaults setBool:NO forKey:kGCAppiraterDeclinedToRate];
-    [userDefaults setDouble:0 forKey:kGCAppiraterReminderRequestDate];
-  }
+    NSLog(@"APPIRATER Significant event count: %@", @(sigEventCount));
   
   [userDefaults synchronize];
 }
@@ -388,9 +312,8 @@ typedef enum GCRatingAlertType {
 - (void)incrementAndRate:(BOOL)canPromptForRating {
   [self incrementUseCount];
   
-  if (canPromptForRating &&
-      [self ratingConditionsHaveBeenMet] &&
-      [self ratingAlertIsAppropriate])
+  if ( canPromptForRating &&
+      [self ratingConditionsHaveBeenMet] )
   {
     dispatch_async(dispatch_get_main_queue(),
                    ^{
@@ -402,23 +325,14 @@ typedef enum GCRatingAlertType {
 - (void)incrementSignificantEventAndRate:(BOOL)canPromptForRating {
   [self incrementSignificantEventCount];
   
-  if (canPromptForRating &&
-      [self ratingConditionsHaveBeenMet] &&
-      [self ratingAlertIsAppropriate])
+  if ( canPromptForRating &&
+      [self ratingConditionsHaveBeenMet] )
   {
     dispatch_async(dispatch_get_main_queue(),
                    ^{
                      [self showRatingAlert];
                    });
   }
-}
-
-- (BOOL)userHasDeclinedToRate {
-  return [[NSUserDefaults standardUserDefaults] boolForKey:kGCAppiraterDeclinedToRate];
-}
-
-- (BOOL)userHasRatedCurrentVersion {
-  return [[NSUserDefaults standardUserDefaults] boolForKey:kGCAppiraterRatedCurrentVersion];
 }
 
 #pragma GCC diagnostic pop
@@ -537,7 +451,9 @@ typedef enum GCRatingAlertType {
 + (void)rateApp {
   
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  [userDefaults setBool:YES forKey:kGCAppiraterRatedCurrentVersion];
+  [userDefaults setBool:YES forKey:kGCAppiraterUserRated];
+  [userDefaults setObject:[NSDate dateWithTimeIntervalSinceNow:kGCAppiraterTimeIntervalUntilPromptingAgain]
+                   forKey:kGCAppiraterAskAgainDate];
   [userDefaults synchronize];
   
 #if TARGET_IPHONE_SIMULATOR
@@ -566,7 +482,8 @@ typedef enum GCRatingAlertType {
                                                             style:UIAlertActionStyleDefault
                                                           handler:^(UIAlertAction *action) {
                                                             NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-                                                            [userDefaults setBool:YES forKey:kGCAppiraterDeclinedToRate];
+                                                            [userDefaults setBool:YES forKey:kGCAppiraterUserDeclinedToRate];
+                                                            [userDefaults setObject:[NSDate distantFuture] forKey:kGCAppiraterAskAgainDate];
                                                             [userDefaults synchronize];
                                                             if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForEnjoyingAlert:eventName:)] ) {
                                                               [weakSelf.delegate appiraterChoseNoForEnjoyingAlert:weakSelf eventName:self.lastEventName];
@@ -630,7 +547,8 @@ typedef enum GCRatingAlertType {
                                                          style:UIAlertActionStyleDefault
                                                        handler:^(UIAlertAction *action) {
                                                          NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-                                                         [userDefaults setDouble:[[NSDate date] timeIntervalSince1970] forKey:kGCAppiraterReminderRequestDate];
+                                                         NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:(NSString*)kCFBundleVersionKey];
+                                                         [userDefaults setObject:version forKey:kGCAppiraterReminderRequestVersion];
                                                          [userDefaults synchronize];
                                                          if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseLaterForRatingAlert:eventName:)] ) {
                                                            [weakSelf.delegate appiraterChoseLaterForRatingAlert:weakSelf eventName:self.lastEventName];
@@ -640,7 +558,9 @@ typedef enum GCRatingAlertType {
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action) {
                                                      NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-                                                     [userDefaults setBool:YES forKey:kGCAppiraterDeclinedToRate];
+                                                     [userDefaults setBool:YES forKey:kGCAppiraterUserDeclinedToRate];
+                                                     [userDefaults setObject:[NSDate dateWithTimeIntervalSinceNow:kGCAppiraterTimeIntervalUntilPromptingAgain]
+                                                                      forKey:kGCAppiraterAskAgainDate];
                                                      [userDefaults synchronize];
                                                      if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForRatingAlert:eventName:)] ) {
                                                        [weakSelf.delegate appiraterChoseNoForRatingAlert:weakSelf eventName:self.lastEventName];
@@ -651,6 +571,27 @@ typedef enum GCRatingAlertType {
   [alert addAction:remindAction];
   [alert addAction:noAction];
   return alert;
+}
+
+- (BOOL)userIsEligibleToRate {
+  NSDate *nextRatingDate = [[NSUserDefaults standardUserDefaults] objectForKey:kGCAppiraterAskAgainDate];
+  if ( ! nextRatingDate ) {
+    return YES;
+  } else {
+    return [[NSDate date] compare:nextRatingDate] == NSOrderedDescending;
+  }
+}
+
+- (void)migrateAppiraterData {
+  
+  if ( ([[NSUserDefaults standardUserDefaults] objectForKey:kGCAppiraterUserRated] ||
+        [[NSUserDefaults standardUserDefaults] objectForKey:kGCAppiraterUserDeclinedToRate]) &&
+      ! [[NSUserDefaults standardUserDefaults] objectForKey:kGCAppiraterAskAgainDate] ) {
+    [[NSUserDefaults standardUserDefaults] setObject:[NSDate dateWithTimeIntervalSinceNow:kGCAppiraterTimeIntervalUntilPromptingAgain]
+                                              forKey:kGCAppiraterAskAgainDate];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+  }
+  
 }
 
 @end

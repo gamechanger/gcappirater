@@ -37,15 +37,6 @@
 #import <Foundation/Foundation.h>
 #import "GCAppiraterDelegate.h"
 
-extern NSString *const kGCAppiraterFirstUseDate;
-extern NSString *const kGCAppiraterUseCount;
-extern NSString *const kGCAppiraterSignificantEventCount;
-extern NSString *const kGCAppiraterCurrentVersion;
-extern NSString *const kGCAppiraterRatedCurrentVersion;
-extern NSString *const kGCAppiraterDeclinedToRate;
-extern NSString *const kGCAppiraterReminderRequestDate;
-
-
 @interface GCAppirater : NSObject
 
 #if __has_feature(objc_arc_weak)
@@ -134,18 +125,6 @@ extern NSString *const kGCAppiraterReminderRequestDate;
  */
 + (void)rateApp;
 
-/*!
- Asks Appirater if the user has declined to rate;
- */
-- (BOOL)userHasDeclinedToRate;
-
-/*!
- Asks Appirater if the user has rated the current version.
- Note that this is not a guarantee that the user has actually rated the app in the
- app store, but they've just clicked the rate button on the Appirater dialog.
- */
-- (BOOL)userHasRatedCurrentVersion;
-
 @end
 
 @interface GCAppirater(Configuration)
@@ -185,14 +164,6 @@ extern NSString *const kGCAppiraterReminderRequestDate;
  [Appirater userDidSignificantEvent:];
  */
 + (void) setSignificantEventsUntilPrompt:(NSInteger)value;
-
-
-/*!
- Once the rating alert is presented to the user, they might select
- 'Remind me later'. This value specifies how long (in days) Appirater
- will wait before reminding them.
- */
-+ (void) setTimeBeforeReminding:(double)value;
 
 /*!
  'YES' will show the Appirater alert everytime. Useful for testing how your message
