@@ -575,9 +575,7 @@ typedef enum GCRatingAlertType {
 
 - (BOOL)userIsEligibleToRate {
   NSDate *nextRatingDate = [[NSUserDefaults standardUserDefaults] objectForKey:kGCAppiraterAskAgainDate];
-  if ( [nextRatingDate isEqual:[NSDate distantFuture]] ) {
-    return NO;
-  } else if ( ! nextRatingDate ) {
+  if ( ! nextRatingDate ) {
     return YES;
   } else {
     return [[NSDate date] compare:nextRatingDate] == NSOrderedDescending;
