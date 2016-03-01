@@ -8,12 +8,31 @@
 
 // https://github.com/kiwi-bdd/Kiwi
 
+#import <Kiwi/Kiwi.h>
+#import <GCAppirater/GCAppirater.h>
+
 SPEC_BEGIN(InitialTests)
 
-describe(@"My initial tests", ^{
-
+describe(@"GCAppirater", ^{
+  __block GCAppirater *appirater;
+  beforeAll(^{
+    appirater = [[GCAppirater alloc] init];
+  });
+  
+  context(@"User has rated app w/o ask again date", ^{
+    beforeEach(^{
+      [[NSUserDefaults standardUserDefaults] objectForKey:kGCAppirater]
+    });
+    it(@"will set ask again date", ^{
+      
+      
+    });
+    
+  });
+  
   context(@"will fail", ^{
 
+    
       it(@"can do maths", ^{
           [[@1 should] equal:@2];
       });
