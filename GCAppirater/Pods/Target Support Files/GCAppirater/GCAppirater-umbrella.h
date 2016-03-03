@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 
+#import "GCAppirater+Private.h"
 #import "GCAppirater.h"
 #import "GCAppiraterDelegate.h"
 

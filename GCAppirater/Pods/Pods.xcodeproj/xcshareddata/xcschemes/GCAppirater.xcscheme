@@ -14,7 +14,7 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = 'AFA1A093B9B7BBD5AB301331'
+               BlueprintIdentifier = '2587237BEEF380230CA251A7'
                BlueprintName = 'GCAppirater'
                ReferencedContainer = 'container:Pods.xcodeproj'
                BuildableName = 'GCAppirater.framework'>
