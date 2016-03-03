@@ -1,0 +1,33 @@
+{
+  'version': 0,
+  'case-sensitive': 'false',
+  'roots': [
+    {
+      'type': 'directory',
+      'name': "/gc/gcappirater/Example/build/Debug-iphoneos/GCAppirater.framework/Headers",
+      'contents': [
+        {
+          'type': 'file',
+          'name': "GCAppirater-Swift.h",
+          'external-contents': "/gc/gcappirater/Example/build/Debug-iphoneos/GCAppirater.framework/Headers/GCAppirater-Swift.h"
+        },
+        {
+          'type': 'file',
+          'name': "GCAppirater-umbrella.h",
+          'external-contents': "/gc/gcappirater/Example/Pods/Target Support Files/GCAppirater/GCAppirater-umbrella.h"
+        }
+      ]
+    },
+    {
+      'type': 'directory',
+      'name': "/gc/gcappirater/Example/build/Debug-iphoneos/GCAppirater.framework/Modules",
+      'contents': [
+        {
+          'type': 'file',
+          'name': "module.modulemap",
+          'external-contents': "/gc/gcappirater/Example/build/Pods.build/Debug-iphoneos/GCAppirater.build/module.modulemap"
+        }
+      ]
+    }
+  ]
+}

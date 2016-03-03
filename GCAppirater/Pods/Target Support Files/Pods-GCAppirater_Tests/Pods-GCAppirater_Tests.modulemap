@@ -1,0 +1,6 @@
+framework module Pods_GCAppirater_Tests {
+  umbrella header "Pods-GCAppirater_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}

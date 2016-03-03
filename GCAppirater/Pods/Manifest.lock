@@ -1,0 +1,17 @@
+PODS:
+  - GCAppirater (3.0.7)
+  - Kiwi (2.4.0)
+
+DEPENDENCIES:
+  - GCAppirater (from `../`)
+  - Kiwi
+
+EXTERNAL SOURCES:
+  GCAppirater:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  GCAppirater: 062ddb386b600632f6caa52440d3533068d5025d
+  Kiwi: f49c9d54b28917df5928fe44968a39ed198cb8a8
+
+COCOAPODS: 0.39.0

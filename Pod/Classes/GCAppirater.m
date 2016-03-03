@@ -50,7 +50,7 @@ NSString *const kGCAppiraterUserDeclinedToRate			= @"kGCAppiraterDeclinedToRate"
 NSString *const kGCAppiraterAskAgainDate = @"kGCAppiraterAskAgainDate";
 NSString *const kGCAppiraterReminderRequestVersion		= @"kGCAppiraterReminderRequestVersion";
 
-static NSInteger kGCAppiraterTimeIntervalUntilPromptingAgain = 365 * 24 * 60 * 60; // 1 Year
+NSInteger const kGCAppiraterTimeIntervalUntilPromptingAgain = 365 * 24 * 60 * 60; // 1 Year
 
 static NSString *templateReviewURL = @"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=APP_ID";
 static NSString *templateReviewURLiOS7 = @"itms-apps://itunes.apple.com/app/idAPP_ID";
