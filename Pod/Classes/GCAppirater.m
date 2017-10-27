@@ -36,6 +36,7 @@
 
 #import "GCAppirater.h"
 #import <SystemConfiguration/SCNetworkReachability.h>
+#import <StoreKit/StoreKit.h>
 #include <netinet/in.h>
 
 #if ! __has_feature(objc_arc)
@@ -196,7 +197,19 @@ typedef enum GCRatingAlertType {
   if(delegate && [delegate respondsToSelector:@selector(appiraterShouldDisplayAlert:)] && ![delegate appiraterShouldDisplayAlert:self]) {
     return;
   }
-  
+
+  if (NSClassFromString(@"SKStoreReviewController") != nil) {
+    [SKStoreReviewController requestReview];
+  } else {
+    [self showLegacyAlertOfType:alertType];
+  }
+
+  if (delegate && [delegate respondsToSelector:@selector(appiraterDidDisplayAlert:)]) {
+    [delegate appiraterDidDisplayAlert:self];
+  }
+}
+
+- (void)showLegacyAlertOfType:(GCRatingAlertType)alertType {
   switch (alertType) {
     case GCRatingAlertTypeEnjoying:
       self.alertController = [self getEnjoyingAlertController];
@@ -210,12 +223,9 @@ typedef enum GCRatingAlertType {
     default:
       break;
   }
-  
+
   [[[self class] getRootViewController] presentViewController:self.alertController animated:YES completion:nil];
-  
-  if (delegate && [delegate respondsToSelector:@selector(appiraterDidDisplayAlert:)]) {
-    [delegate appiraterDidDisplayAlert:self];
-  }
+
 }
 
 - (void)showRatingAlert
