@@ -61,6 +61,7 @@ static NSString *_appId;
 static double _daysUntilPrompt = 30;
 static NSInteger _usesUntilPrompt = 20;
 static NSInteger _significantEventsUntilPrompt = -1;
+static NSInteger _minutesBetweenPrompts = 0;
 static BOOL _debug = NO;
 __weak static id<GCAppiraterDelegate> _delegate;
 static UIStatusBarStyle _statusBarStyle;
@@ -96,6 +97,10 @@ typedef enum GCRatingAlertType {
 
 + (void) setSignificantEventsUntilPrompt:(NSInteger)value {
   _significantEventsUntilPrompt = value;
+}
+
++ (void) setMinutesBetweenPrompts:(NSInteger)value {
+  _minutesBetweenPrompts = value;
 }
 
 + (void) setDebug:(BOOL)debug {
@@ -200,6 +205,7 @@ typedef enum GCRatingAlertType {
 
   if (NSClassFromString(@"SKStoreReviewController") != nil) {
     [SKStoreReviewController requestReview];
+    [GCAppirater setPromptAgainInSeconds:_minutesBetweenPrompts * 60];
   } else {
     [self showLegacyAlertOfType:alertType];
   }
@@ -228,8 +234,7 @@ typedef enum GCRatingAlertType {
 
 }
 
-- (void)showRatingAlert
-{
+- (void)showRatingAlert {
   [self showAlertOfType:GCRatingAlertTypeEnjoying];
 }
 
@@ -462,10 +467,8 @@ typedef enum GCRatingAlertType {
   
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
   [userDefaults setBool:YES forKey:kGCAppiraterUserRated];
-  [userDefaults setObject:[NSDate dateWithTimeIntervalSinceNow:kGCAppiraterTimeIntervalUntilPromptingAgain]
-                   forKey:kGCAppiraterAskAgainDate];
-  [userDefaults synchronize];
-  
+  [self setPromptAgainInSeconds:kGCAppiraterTimeIntervalUntilPromptingAgain];
+
 #if TARGET_IPHONE_SIMULATOR
   NSLog(@"APPIRATER NOTE: iTunes App Store is not supported on the iOS simulator. Unable to open App Store page.");
 #else
@@ -569,9 +572,7 @@ typedef enum GCRatingAlertType {
                                                    handler:^(UIAlertAction *action) {
                                                      NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
                                                      [userDefaults setBool:YES forKey:kGCAppiraterUserDeclinedToRate];
-                                                     [userDefaults setObject:[NSDate dateWithTimeIntervalSinceNow:kGCAppiraterTimeIntervalUntilPromptingAgain]
-                                                                      forKey:kGCAppiraterAskAgainDate];
-                                                     [userDefaults synchronize];
+                                                     [GCAppirater setPromptAgainInSeconds: kGCAppiraterTimeIntervalUntilPromptingAgain];
                                                      if ( [weakSelf.delegate respondsToSelector:@selector(appiraterChoseNoForRatingAlert:eventName:)] ) {
                                                        [weakSelf.delegate appiraterChoseNoForRatingAlert:weakSelf eventName:self.lastEventName];
                                                      }
@@ -581,6 +582,12 @@ typedef enum GCRatingAlertType {
   [alert addAction:remindAction];
   [alert addAction:noAction];
   return alert;
+}
+
++ (void)setPromptAgainInSeconds:(NSTimeInterval)seconds {
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  [userDefaults setObject:[NSDate dateWithTimeIntervalSinceNow:seconds] forKey:kGCAppiraterAskAgainDate];
+  [userDefaults synchronize];
 }
 
 - (BOOL)userIsEligibleToRate {

@@ -153,6 +153,13 @@
 + (void) setUsesUntilPrompt:(NSInteger)value;
 
 /*!
+ Only works when using Apple's pop up. As we don't know what they user
+ answered or even if the user saw a prompt we limit the time between
+ consecutive prompts
+ */
++ (void) setMinutesBetweenPrompts:(NSInteger)value;
+
+/*!
  A significant event can be anything you want to be in your app. In a
  telephone app, a significant event might be placing or receiving a call.
  In a game, it might be beating a level or a boss. This is just another
