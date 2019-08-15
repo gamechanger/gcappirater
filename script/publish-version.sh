@@ -16,7 +16,7 @@ fi
 
 set -e
 pushd `dirname "${BASH_SOURCE[0]}"`
-swift run inline-template-renderer ../GCAppirater.podspec version=$VERSION
+swift run inline-template-renderer ../GCAppirater.podspec version=$1
 git add ../GCAppirater.podspec
 git commit -m "Update podspec" || true
 git push origin master
