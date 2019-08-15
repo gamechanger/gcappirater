@@ -1,10 +1,10 @@
 Pod::Spec.new do |s|
   s.name         = "GCAppirater"
-  ##<
-  ##  s.version = '<%=version=%>'
-  ##=
+##<
+##  s.version = '<%=version=%>'
+##=
     s.version = '3.3.2'
-  ##>
+##>
   s.summary      = "GC fork of Appirater."
   s.homepage     = "https://github.com/gamechanger/gcappirater.git"
   s.author       = { "Brian Bernberg" => "brian@gc.com" }
