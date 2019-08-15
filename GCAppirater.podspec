@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
 ##<
 ##  s.version = '<%=version=%>'
 ##=
-    s.version = '3.3.2'
+  s.version = '3.2.2'
 ##>
   s.summary      = "GC fork of Appirater."
   s.homepage     = "https://github.com/gamechanger/gcappirater.git"
