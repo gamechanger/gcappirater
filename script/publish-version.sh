@@ -16,7 +16,7 @@ fi
 
 set -e
 pushd `dirname "${BASH_SOURCE[0]}"`
-ruby generate-podspec.rb $1 > ../GCAppirater.podspec
+swift run inline-template-renderer ../GCAppirater.podspec version=$VERSION
 git add ../GCAppirater.podspec
 git commit -m "Update podspec" || true
 git push origin master
